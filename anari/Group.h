@@ -28,6 +28,7 @@ namespace barney_device {
     helium::ChangeObserverPtr<ObjectArray> m_surfaceData;
     helium::ChangeObserverPtr<ObjectArray> m_volumeData;
     helium::ChangeObserverPtr<ObjectArray> m_lightData;
+    bool m_structuralChange{true};
   };
 
 } // namespace barney_device

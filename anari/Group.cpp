@@ -19,14 +19,31 @@ namespace barney_device {
 
   void Group::commitParameters()
   {
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    auto *oldSurface = m_surfaceData.get();
+    auto *oldVolume  = m_volumeData.get();
+    auto *oldLight   = m_lightData.get();
+#endif
     m_surfaceData = getParamObject<ObjectArray>("surface");
-    m_volumeData = getParamObject<ObjectArray>("volume");
-    m_lightData = getParamObject<ObjectArray>("light");
+    m_volumeData  = getParamObject<ObjectArray>("volume");
+    m_lightData   = getParamObject<ObjectArray>("light");
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    m_structuralChange = (m_surfaceData.get() != oldSurface)
+                      || (m_volumeData.get()  != oldVolume)
+                      || (m_lightData.get()   != oldLight);
+#endif
   }
 
   void Group::markFinalized()
   {
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    if (m_structuralChange)
+      deviceState()->markStructuralSceneChanged();
+    else
+      deviceState()->markSceneChanged();
+#else
     deviceState()->markStructuralSceneChanged();
+#endif
     Object::markFinalized();
   }
 
