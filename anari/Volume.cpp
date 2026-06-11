@@ -25,7 +25,15 @@ namespace barney_device {
 
   void Volume::markFinalized()
   {
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    if (m_visibleChanged)
+      deviceState()->markSceneChanged();
+    else
+      deviceState()->markStructuralSceneChanged();
+    m_visibleChanged = false;
+#else
     deviceState()->markStructuralSceneChanged();
+#endif
     Object::markFinalized();
   }
 
@@ -50,8 +58,15 @@ namespace barney_device {
 
   void Volume::commitParameters()
   {
-    m_id = getParam<uint32_t>("id", ~0u);
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    bool oldVisible = m_visible;
+    uint32_t oldId  = m_id;
+#endif
+    m_id      = getParam<uint32_t>("id", ~0u);
     m_visible = getParam<bool>("visible", true);
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    m_visibleChanged = (m_visible != oldVisible) && (m_id == oldId);
+#endif
   }
 
   bool Volume::isVisible() const
@@ -72,6 +87,9 @@ namespace barney_device {
 
   void TransferFunction1D::commitParameters()
   {
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    auto *oldField = m_field.get();
+#endif
     Volume::commitParameters();
     m_field = getParamObject<SpatialField>("value");
     m_valueRange = getParam<box1>("valueRange", box1{0.f, 1.f});
@@ -82,7 +100,10 @@ namespace barney_device {
     m_opacityData = getParamObject<helium::Array1D>("opacity");
     m_uniformOpacity = getParam<float>("opacity", 1.f) * m_uniformColor.w;
     m_unitDistance = getParam<float>("unitDistance", 1.f);
-
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    if (m_field.get() != oldField)
+      m_visibleChanged = false;
+#endif
     invalidateBarneyVolumeIfFieldChanged();
   }
 

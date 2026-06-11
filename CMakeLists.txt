@@ -192,6 +192,13 @@ if (BARNEY_CUBQL_HOST)
   target_compile_definitions(barney_config INTERFACE -DBARNEY_CUBQL_HOST=1)
   target_link_libraries(barney_config INTERFACE cuBQL)
 endif()
+
+option(BARNEY_NO_REBUILD_ON_VISIBILITY
+  "Skip BVH rebuild when only surface/volume visibility changes (invisible geometry stays in BVH)"
+  OFF)
+if (BARNEY_NO_REBUILD_ON_VISIBILITY)
+  target_compile_definitions(barney_config INTERFACE -DBARNEY_NO_REBUILD_ON_VISIBILITY=1)
+endif()
 target_link_libraries(barney_config
   INTERFACE
   cuBQL

@@ -19,10 +19,22 @@ namespace barney_device {
 
   void Surface::commitParameters()
   {
-    m_id = getParam<uint32_t>("id", ~0u);
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    bool oldVisible = m_visible;
+    auto *oldGeom   = m_geometry.get();
+    auto *oldMat    = m_material.get();
+    uint32_t oldId  = m_id;
+#endif
+    m_id       = getParam<uint32_t>("id", ~0u);
     m_geometry = getParamObject<Geometry>("geometry");
     m_material = getParamObject<Material>("material");
-    m_visible = getParam<bool>("visible", true);
+    m_visible  = getParam<bool>("visible", true);
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    m_visibleChanged = (m_visible != oldVisible)
+        && (m_geometry.get() == oldGeom)
+        && (m_material.get() == oldMat)
+        && (m_id == oldId);
+#endif
   }
 
   void Surface::finalize()
@@ -42,7 +54,15 @@ namespace barney_device {
 
   void Surface::markFinalized()
   {
+#ifdef BARNEY_NO_REBUILD_ON_VISIBILITY
+    if (m_visibleChanged)
+      deviceState()->markSceneChanged();
+    else
+      deviceState()->markStructuralSceneChanged();
+    m_visibleChanged = false;
+#else
     deviceState()->markStructuralSceneChanged();
+#endif
     Object::markFinalized();
   }
 

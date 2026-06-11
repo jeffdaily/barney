@@ -33,6 +33,7 @@ namespace barney_device {
 
     uint32_t m_id{~0u};
     bool m_visible{true};
+    bool m_visibleChanged{false};
     helium::ChangeObserverPtr<Geometry> m_geometry;
     helium::ChangeObserverPtr<Material> m_material;
 
